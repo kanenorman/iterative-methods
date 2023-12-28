@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots
@@ -29,38 +31,9 @@ def initialize_matrix(h):
     return w
 
 
-def jacobi(h, n_iterations=10000, tol=1e-8):
+def solve_heat_equation(h, update_strategy, n_iterations=10000, tol=1e-8):
     """
-    Solves the heat equation using the Jacobi method.
-    """
-    w_old = initialize_matrix(h)
-    f = np.zeros_like(w_old)
-    ratio = 1
-    k = 0
-
-    while ratio > tol and k < n_iterations:
-        k += 1
-        w_new = np.copy(w_old)
-
-        for i in range(1, len(w_old) - 1):
-            for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (
-                    w_old[i + 1, j]
-                    + w_old[i - 1, j]
-                    + w_old[i, j - 1]
-                    + w_old[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
-
-        ratio = np.max(np.abs(w_new - w_old))
-        w_old = w_new
-
-    return w_old
-
-
-def gauss_seidel(h, n_iterations=10000, tol=1e-8):
-    """
-    Solves the heat equation using the Gauss-Seidel method.
+    Solves the heat equation using a general iterative method.
     """
     w_old = initialize_matrix(h)
     f = np.zeros_like(w_old)
@@ -73,13 +46,8 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (
-                    w_new[i + 1, j]
-                    + w_new[i - 1, j]
-                    + w_new[i, j - 1]
-                    + w_new[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
+                new_value = update_strategy(w_old, w_new, i, j, h, f)
+                w_new[i, j] = new_value
 
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
@@ -87,35 +55,36 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
     return w_old
 
 
-def successive_over_relaxation(h, n_iterations=10000, tol=1e-8):
-    """
-    Solves the heat equation using the Successive Over-Relaxation (SOR) method.
-    """
-    w_old = initialize_matrix(h)
-    f = np.zeros_like(w_old)
-    ratio = 1
-    k = 0
+def jacobi_update(w_old, w_new, i, j, h, f):
+    return (
+        w_old[i + 1, j]
+        + w_old[i - 1, j]
+        + w_old[i, j - 1]
+        + w_old[i, j + 1]
+        + f[i, j] * h**2
+    ) / 4
+
+
+def gauss_seidel_update(w_old, w_new, i, j, h, f):
+    return (
+        w_new[i + 1, j]
+        + w_new[i - 1, j]
+        + w_new[i, j - 1]
+        + w_new[i, j + 1]
+        + f[i, j] * h**2
+    ) / 4
+
+
+def sor_update(w_old, w_new, i, j, h, f):
     omega = 2 / (1 + np.sqrt(1 - np.cos(np.pi * h) ** 2))
-
-    while ratio > tol and k < n_iterations:
-        k += 1
-        w_new = np.copy(w_old)
-
-        for i in range(1, len(w_old) - 1):
-            for j in range(1, len(w_old) - 1):
-                new_value = (
-                    w_new[i + 1, j]
-                    + w_new[i - 1, j]
-                    + w_new[i, j - 1]
-                    + w_new[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
-                w_new[i, j] = omega * new_value + (1 - omega) * w_old[i, j]
-
-        ratio = np.max(np.abs(w_new - w_old))
-        w_old = w_new
-
-    return w_old
+    new_value = (
+        w_new[i + 1, j]
+        + w_new[i - 1, j]
+        + w_new[i, j - 1]
+        + w_new[i, j + 1]
+        + f[i, j] * h**2
+    ) / 4
+    return omega * new_value + (1 - omega) * w_old[i, j]
 
 
 def plot_solution(method, h, first_row=False):
@@ -156,12 +125,15 @@ def true_solution_plot(n_points, first_row=False):
     return contour
 
 
-def main():
+def main() -> int:
     h_list = [1 / 2, 1 / 4, 1 / 8]
     methods = {
-        jacobi: "Jacobi",
-        gauss_seidel: "Gauss-Seidel",
-        successive_over_relaxation: "Successive Over Relaxation",
+        lambda h: solve_heat_equation(h, jacobi_update): "Jacobi",
+        lambda h: solve_heat_equation(h, gauss_seidel_update): "Gauss-Seidel",
+        lambda h: solve_heat_equation(
+            h,
+            sor_update,
+        ): "Successive Over Relaxation",
     }
     num_methods = len(methods)
 
@@ -192,6 +164,8 @@ def main():
     plt.tight_layout()
     plt.show()
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
