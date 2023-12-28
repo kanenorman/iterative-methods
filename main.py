@@ -173,8 +173,9 @@ def animate_solutions(h, file_name):
     x = np.linspace(0, 1, n_points)
     y = np.linspace(0, 1, n_points)
     X, Y = np.meshgrid(x, y)
+    Z_true = phi(X, Y)
 
-    fig = plt.figure(figsize=(15, 5))
+    fig = plt.figure(figsize=(18, 6))
 
     ax_jacobi = fig.add_subplot(1, 3, 1, projection="3d")
     ax_jacobi.set_title("Jacobi Method")
@@ -182,6 +183,10 @@ def animate_solutions(h, file_name):
     ax_gauss_seidel.set_title("Gauss-Seidel Method")
     ax_sor = fig.add_subplot(1, 3, 3, projection="3d")
     ax_sor.set_title("SOR Method")
+
+    error_texts = [
+        fig.text(0.1 + 0.3 * i, 0.02, "", transform=fig.transFigure) for i in range(3)
+    ]
 
     def update(frame):
         nonlocal w_jacobi, w_gauss_seidel, w_sor
@@ -191,12 +196,22 @@ def animate_solutions(h, file_name):
         )
         w_sor = solve_heat_equation_step(w_sor, sor_update, h)
 
-        for ax, w in zip(
-            [ax_jacobi, ax_gauss_seidel, ax_sor], [w_jacobi, w_gauss_seidel, w_sor]
+        errors = []
+        for ax, w, method in zip(
+            [ax_jacobi, ax_gauss_seidel, ax_sor],
+            [w_jacobi, w_gauss_seidel, w_sor],
+            ["Jacobi", "Gauss-Seidel", "SOR"],
         ):
             ax.clear()
             ax.plot_surface(X, Y, w, cmap="hot")
             ax.set_zlim(0, np.exp(np.pi))
+            error = np.max(np.abs(w - Z_true))
+            errors.append(error)
+
+        for error_text, error, method in zip(
+            error_texts, errors, ["Jacobi", "Gauss-Seidel", "SOR"]
+        ):
+            error_text.set_text(f"{method} Error: {error:.2e}")
 
         fig.suptitle(f"Iteration: {frame+1}")
 
