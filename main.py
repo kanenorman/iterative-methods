@@ -101,17 +101,6 @@ def generic_plot(X, Y, Z, first_row, title):
     return contour
 
 
-def generic_plot_3d(ax, X, Y, Z, first_row, title):
-    """
-    A generic plot function for 3D surface plots.
-    """
-    surface = ax.plot_surface(X, Y, Z, cmap="hot", rstride=1, cstride=1, alpha=0.8)
-    if first_row:
-        ax.set_title(title)
-
-    return surface
-
-
 def approximate_solution_plot(method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing.
@@ -137,6 +126,17 @@ def true_solution_plot(n_points, first_row=False):
     return generic_plot(X, Y, Z, first_row, "True Solution")
 
 
+def generic_plot_3d(ax, X, Y, Z, first_row, title):
+    """
+    A generic plot function for 3D surface plots.
+    """
+    surface = ax.plot_surface(X, Y, Z, cmap="hot", rstride=1, cstride=1, alpha=0.8)
+    if first_row:
+        ax.set_title(title)
+
+    return surface
+
+
 def approximate_solution_plot_3d(ax, method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing in 3D.
@@ -147,7 +147,7 @@ def approximate_solution_plot_3d(ax, method, h, first_row=False):
     y = np.linspace(0, 1, n_points)
     X, Y = np.meshgrid(x, y)
 
-    return generic_plot_3d(ax, X, Y, w, first_row, f"h={h} (3D)")
+    return generic_plot_3d(ax, X, Y, w, first_row, f"h={h}")
 
 
 def true_solution_plot_3d(ax, n_points, first_row=False):
@@ -159,7 +159,7 @@ def true_solution_plot_3d(ax, n_points, first_row=False):
     X, Y = np.meshgrid(x, y)
     Z = phi(X, Y)
 
-    return generic_plot_3d(ax, X, Y, Z, first_row, "True Solution (3D)")
+    return generic_plot_3d(ax, X, Y, Z, first_row, "True Solution")
 
 
 def main() -> int:
@@ -173,7 +173,7 @@ def main() -> int:
     num_cols = len(h_list) + 1  # Additional column for the True Solution
 
     # Create 2D plot figure
-    plt.figure(figsize=(20, 10))
+    plt.figure(figsize=(25, 10))
     for row, method in enumerate(methods.keys(), start=1):
         for col, h in enumerate(h_list):
             first_row = row == 1
@@ -194,7 +194,7 @@ def main() -> int:
         fontsize="xx-large",
     )
     plt.tight_layout()
-    plt.show()
+    plt.savefig("plots/2d_contour.png")
 
     # Create 3D plot figure
     plt.figure(figsize=(20, 10))
@@ -205,6 +205,19 @@ def main() -> int:
                 num_methods, num_cols, (row - 1) * num_cols + col + 1, projection="3d"
             )
             approximate_solution_plot_3d(ax, method, h, first_row)
+
+            # Add vertical labels for each row
+            if col == 0:
+                ax.text2D(
+                    -0.1,
+                    0.5,
+                    methods[method],
+                    transform=ax.transAxes,
+                    rotation=90,
+                    verticalalignment="center",
+                    horizontalalignment="left",
+                    fontsize=10,
+                )
 
     # Plot True Solution in 3D
     for row in range(1, num_methods + 1):
@@ -217,8 +230,8 @@ def main() -> int:
         r"3D Surface Plots: Approximate Solutions to $\phi(x,y) = sin(\pi x)  e^{\pi y}$",
         fontsize="xx-large",
     )
-    plt.tight_layout()
-    plt.show()
+    plt.tight_layout(pad=3.0)
+    plt.savefig("plots/3d_surface.png")
 
     return 0
 
