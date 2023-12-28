@@ -9,9 +9,9 @@ plt.style.use(["science"])
 
 def phi(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
-    Represents the heat equation Φ(x,y) = sin(πy) * e^(πx).
+    Represents the heat equation Φ(x,y) = sin(πx) * e^(πy).
     """
-    return np.sin(np.pi * y) * np.exp(np.pi * x)
+    return np.sin(np.pi * x) * np.exp(np.pi * y)
 
 
 def initialize_matrix(h):
@@ -126,7 +126,7 @@ def true_solution_plot(n_points, first_row=False):
 
 
 def main() -> int:
-    h_list = [1 / 2, 1 / 4, 1 / 8]
+    h_list = [1 / 2**x for x in range(1, 6)]  # 1/2, 1/4, ...1/64
     methods = {
         lambda h: solve_heat_equation(h, jacobi_update): "Jacobi",
         lambda h: solve_heat_equation(h, gauss_seidel_update): "Gauss-Seidel",
@@ -158,7 +158,7 @@ def main() -> int:
         true_solution_plot(n_points, first_row)
 
     plt.suptitle(
-        r"Approximate Solutions to $\phi(x,y) = sin(\pi y)  e^{\pi x}$",
+        r"Approximate Solutions to $\phi(x,y) = sin(\pi x)  e^{\pi y}$",
         fontsize="xx-large",
     )
     plt.tight_layout()
