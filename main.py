@@ -1,5 +1,4 @@
 import sys
-from os import WCOREDUMP
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +53,7 @@ def solve_heat_equation(h, update_strategy, n_iterations=10000, tol=1e-8):
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
 
-    return w_old, ratio
+    return w_old
 
 
 def jacobi_update(w_old, w_new, i, j, h, f):
@@ -106,7 +105,7 @@ def approximate_solution_plot(method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing.
     """
-    w, _ = method(h)
+    w = method(h)
     n_points = w.shape[0]
     x = np.linspace(0, 1, n_points)
     y = np.linspace(0, 1, n_points)
@@ -142,7 +141,7 @@ def approximate_solution_plot_3d(ax, method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing in 3D.
     """
-    w, _ = method(h)
+    w = method(h)
     n_points = w.shape[0]
     x = np.linspace(0, 1, n_points)
     y = np.linspace(0, 1, n_points)
@@ -173,21 +172,12 @@ def main() -> int:
     num_methods = len(methods)
     num_cols = len(h_list) + 1  # Additional column for the True Solution
 
-    # Dictionary to store residuals
-    residuals = {method_name: [] for method_name in methods.values()}
-
-    for method, name in methods.items():
-        for h in h_list:
-            _, residual = method(h)  # Get the residual
-            residuals[name].append(residual)
-
     # Create 2D plot figure
     plt.figure(figsize=(25, 10))
     for row, method in enumerate(methods.keys(), start=1):
         for col, h in enumerate(h_list):
             first_row = row == 1
             plt.subplot(num_methods, num_cols, (row - 1) * num_cols + col + 1)
-            _, _ = method(h)  # Get solution for plotting
             approximate_solution_plot(method, h, first_row)
             if col == 0:
                 plt.ylabel(methods[method])
@@ -214,8 +204,9 @@ def main() -> int:
             ax = plt.subplot(
                 num_methods, num_cols, (row - 1) * num_cols + col + 1, projection="3d"
             )
-            _, _ = method(h)  # Get solution for plotting
             approximate_solution_plot_3d(ax, method, h, first_row)
+
+            # Add vertical labels for each row
             if col == 0:
                 ax.text2D(
                     -0.1,
@@ -241,13 +232,6 @@ def main() -> int:
     )
     plt.tight_layout(pad=3.0)
     plt.savefig("plots/3d_surface.png")
-
-    # Printing the table
-    print("Residuals for each method and grid spacing (h):")
-    print("{:<30} {}".format("Method", " ".join([f"h={h:<5}" for h in h_list])))
-    for method_name, res_list in residuals.items():
-        formatted_res = " ".join([f"{res:<10.2e}" for res in res_list])
-        print(f"{method_name:<30} {formatted_res}")
 
     return 0
 
