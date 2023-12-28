@@ -3,6 +3,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots
+from mpl_toolkits.mplot3d import Axes3D
 
 plt.style.use(["science"])
 
@@ -100,6 +101,17 @@ def generic_plot(X, Y, Z, first_row, title):
     return contour
 
 
+def generic_plot_3d(ax, X, Y, Z, first_row, title):
+    """
+    A generic plot function for 3D surface plots.
+    """
+    surface = ax.plot_surface(X, Y, Z, cmap="hot", rstride=1, cstride=1, alpha=0.8)
+    if first_row:
+        ax.set_title(title)
+
+    return surface
+
+
 def approximate_solution_plot(method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing.
@@ -125,40 +137,84 @@ def true_solution_plot(n_points, first_row=False):
     return generic_plot(X, Y, Z, first_row, "True Solution")
 
 
+def approximate_solution_plot_3d(ax, method, h, first_row=False):
+    """
+    Plots the solution for a given method and grid spacing in 3D.
+    """
+    w = method(h)
+    n_points = w.shape[0]
+    x = np.linspace(0, 1, n_points)
+    y = np.linspace(0, 1, n_points)
+    X, Y = np.meshgrid(x, y)
+
+    return generic_plot_3d(ax, X, Y, w, first_row, f"h={h} (3D)")
+
+
+def true_solution_plot_3d(ax, n_points, first_row=False):
+    """
+    Plots the true solution of the heat equation in 3D.
+    """
+    x = np.linspace(0, 1, n_points)
+    y = np.linspace(0, 1, n_points)
+    X, Y = np.meshgrid(x, y)
+    Z = phi(X, Y)
+
+    return generic_plot_3d(ax, X, Y, Z, first_row, "True Solution (3D)")
+
+
 def main() -> int:
     h_list = [1 / 2**x for x in range(1, 6)]  # 1/2, 1/4, ...1/64
     methods = {
         lambda h: solve_heat_equation(h, jacobi_update): "Jacobi",
         lambda h: solve_heat_equation(h, gauss_seidel_update): "Gauss-Seidel",
-        lambda h: solve_heat_equation(
-            h,
-            sor_update,
-        ): "Successive Over Relaxation",
+        lambda h: solve_heat_equation(h, sor_update): "Successive Over Relaxation",
     }
     num_methods = len(methods)
-
-    plt.figure(figsize=(20, 10))
     num_cols = len(h_list) + 1  # Additional column for the True Solution
-    num_rows = num_methods
 
-    # Plot solutions for each method
+    # Create 2D plot figure
+    plt.figure(figsize=(20, 10))
     for row, method in enumerate(methods.keys(), start=1):
         for col, h in enumerate(h_list):
             first_row = row == 1
-            plt.subplot(num_rows, num_cols, (row - 1) * num_cols + col + 1)
+            plt.subplot(num_methods, num_cols, (row - 1) * num_cols + col + 1)
             approximate_solution_plot(method, h, first_row)
             if col == 0:
                 plt.ylabel(methods[method])
 
-    # Plot the true solution in the last column
-    for row in range(1, num_rows + 1):
+    # Plot True Solution in 2D
+    for row in range(1, num_methods + 1):
         first_row = row == 1
-        plt.subplot(num_rows, num_cols, row * num_cols)
+        plt.subplot(num_methods, num_cols, row * num_cols)
         n_points = int(1 / h_list[-1]) + 1
         true_solution_plot(n_points, first_row)
 
     plt.suptitle(
-        r"Approximate Solutions to $\phi(x,y) = sin(\pi x)  e^{\pi y}$",
+        r"2D Contour Plots: Approximate Solutions to $\phi(x,y) = sin(\pi x)  e^{\pi y}$",
+        fontsize="xx-large",
+    )
+    plt.tight_layout()
+    plt.show()
+
+    # Create 3D plot figure
+    plt.figure(figsize=(20, 10))
+    for row, method in enumerate(methods.keys(), start=1):
+        for col, h in enumerate(h_list):
+            first_row = row == 1
+            ax = plt.subplot(
+                num_methods, num_cols, (row - 1) * num_cols + col + 1, projection="3d"
+            )
+            approximate_solution_plot_3d(ax, method, h, first_row)
+
+    # Plot True Solution in 3D
+    for row in range(1, num_methods + 1):
+        first_row = row == 1
+        ax = plt.subplot(num_methods, num_cols, row * num_cols, projection="3d")
+        n_points = int(1 / h_list[-1]) + 1
+        true_solution_plot_3d(ax, n_points, first_row)
+
+    plt.suptitle(
+        r"3D Surface Plots: Approximate Solutions to $\phi(x,y) = sin(\pi x)  e^{\pi y}$",
         fontsize="xx-large",
     )
     plt.tight_layout()
