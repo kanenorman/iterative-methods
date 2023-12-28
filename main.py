@@ -87,7 +87,20 @@ def sor_update(w_old, w_new, i, j, h, f):
     return omega * new_value + (1 - omega) * w_old[i, j]
 
 
-def plot_solution(method, h, first_row=False):
+def generic_plot(X, Y, Z, first_row, title):
+    """
+    A generic plot function for contour plots.
+    """
+    contour = plt.contourf(
+        X, Y, Z, cmap="hot", levels=np.linspace(np.min(Z), np.max(Z), num=20)
+    )
+    if first_row:
+        plt.title(title)
+
+    return contour
+
+
+def approximate_solution_plot(method, h, first_row=False):
     """
     Plots the solution for a given method and grid spacing.
     """
@@ -97,13 +110,7 @@ def plot_solution(method, h, first_row=False):
     y = np.linspace(0, 1, n_points)
     X, Y = np.meshgrid(x, y)
 
-    contour = plt.contourf(
-        X, Y, w, cmap="hot", levels=np.linspace(np.min(w), np.max(w), num=20)
-    )
-    if first_row:
-        plt.title(f"h={h}")
-
-    return contour
+    return generic_plot(X, Y, w, first_row, f"h={h}")
 
 
 def true_solution_plot(n_points, first_row=False):
@@ -115,14 +122,7 @@ def true_solution_plot(n_points, first_row=False):
     X, Y = np.meshgrid(x, y)
     Z = phi(X, Y)
 
-    contour = plt.contourf(
-        X, Y, Z, cmap="hot", levels=np.linspace(np.min(Z), np.max(Z), num=20)
-    )
-
-    if first_row:
-        plt.title("True Solution")
-
-    return contour
+    return generic_plot(X, Y, Z, first_row, "True Solution")
 
 
 def main() -> int:
@@ -146,7 +146,7 @@ def main() -> int:
         for col, h in enumerate(h_list):
             first_row = row == 1
             plt.subplot(num_rows, num_cols, (row - 1) * num_cols + col + 1)
-            plot_solution(method, h, first_row)
+            approximate_solution_plot(method, h, first_row)
             if col == 0:
                 plt.ylabel(methods[method])
 
