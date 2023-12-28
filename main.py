@@ -3,7 +3,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
 plt.style.use(["science"])
 
@@ -162,7 +162,63 @@ def true_solution_plot_3d(ax, n_points, first_row=False):
     return generic_plot_3d(ax, X, Y, Z, first_row, "True Solution")
 
 
+def animate_solutions(h, file_name):
+    """
+    Animates the solution process for all methods and saves it to a file.
+    """
+    w_jacobi = initialize_matrix(h)
+    w_gauss_seidel = initialize_matrix(h)
+    w_sor = initialize_matrix(h)
+    n_points = w_jacobi.shape[0]
+    x = np.linspace(0, 1, n_points)
+    y = np.linspace(0, 1, n_points)
+    X, Y = np.meshgrid(x, y)
+
+    fig = plt.figure(figsize=(15, 5))
+
+    ax_jacobi = fig.add_subplot(1, 3, 1, projection="3d")
+    ax_jacobi.set_title("Jacobi Method")
+    ax_gauss_seidel = fig.add_subplot(1, 3, 2, projection="3d")
+    ax_gauss_seidel.set_title("Gauss-Seidel Method")
+    ax_sor = fig.add_subplot(1, 3, 3, projection="3d")
+    ax_sor.set_title("SOR Method")
+
+    def update(frame):
+        nonlocal w_jacobi, w_gauss_seidel, w_sor
+        w_jacobi = solve_heat_equation_step(w_jacobi, jacobi_update, h)
+        w_gauss_seidel = solve_heat_equation_step(
+            w_gauss_seidel, gauss_seidel_update, h
+        )
+        w_sor = solve_heat_equation_step(w_sor, sor_update, h)
+
+        for ax, w in zip(
+            [ax_jacobi, ax_gauss_seidel, ax_sor], [w_jacobi, w_gauss_seidel, w_sor]
+        ):
+            ax.clear()
+            ax.plot_surface(X, Y, w, cmap="hot")
+            ax.set_zlim(0, np.exp(np.pi))
+
+        fig.suptitle(f"Iteration: {frame+1}")
+
+    anim = FuncAnimation(fig, update, frames=100, interval=50)
+    anim.save(file_name, writer="imagemagick")
+
+
+def solve_heat_equation_step(w_old, update_strategy, h):
+    """
+    Performs a single step of the heat equation solution using the specified update strategy.
+    """
+    w_new = np.copy(w_old)
+    for i in range(1, len(w_old) - 1):
+        for j in range(1, len(w_old) - 1):
+            w_new[i, j] = update_strategy(w_old, w_new, i, j, h, np.zeros_like(w_old))
+    return w_new
+
+
 def main() -> int:
+    h = 1 / 16  # Choose a fixed h for animation
+    animate_solutions(h, "heat_equation_animation.gif")
+
     h_list = [1 / 2**x for x in range(1, 6)]  # 1/2, 1/4, ...1/64
     methods = {
         lambda h: solve_heat_equation(h, jacobi_update): "Jacobi",
