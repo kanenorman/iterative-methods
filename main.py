@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import scienceplots
 
 plt.style.use(["science"])
@@ -44,8 +44,13 @@ def jacobi(h, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (w_old[i + 1, j] + w_old[i - 1, j] + w_old[i, j - 1] + w_old[i, j + 1] + f[
-                    i, j] * h ** 2) / 4
+                w_new[i, j] = (
+                    w_old[i + 1, j]
+                    + w_old[i - 1, j]
+                    + w_old[i, j - 1]
+                    + w_old[i, j + 1]
+                    + f[i, j] * h**2
+                ) / 4
 
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
@@ -68,8 +73,13 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (w_new[i + 1, j] + w_new[i - 1, j] + w_new[i, j - 1] + w_new[i, j + 1] + f[
-                    i, j] * h ** 2) / 4
+                w_new[i, j] = (
+                    w_new[i + 1, j]
+                    + w_new[i - 1, j]
+                    + w_new[i, j - 1]
+                    + w_new[i, j + 1]
+                    + f[i, j] * h**2
+                ) / 4
 
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
@@ -92,8 +102,13 @@ def successive_over_relaxation(h, omega=1.5, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                new_value = (w_new[i + 1, j] + w_new[i - 1, j] + w_new[i, j - 1] + w_new[i, j + 1] + f[
-                    i, j] * h ** 2) / 4
+                new_value = (
+                    w_new[i + 1, j]
+                    + w_new[i - 1, j]
+                    + w_new[i, j - 1]
+                    + w_new[i, j + 1]
+                    + f[i, j] * h**2
+                ) / 4
                 w_new[i, j] = omega * new_value + (1 - omega) * w_old[i, j]
 
         ratio = np.max(np.abs(w_new - w_old))
@@ -112,7 +127,9 @@ def plot_solution(method, h, first_row=False):
     y = np.linspace(0, 1, n_points)
     X, Y = np.meshgrid(x, y)
 
-    contour = plt.contourf(X, Y, w, cmap='hot', levels=np.linspace(np.min(w), np.max(w), num=20))
+    contour = plt.contourf(
+        X, Y, w, cmap="hot", levels=np.linspace(np.min(w), np.max(w), num=20)
+    )
     if first_row:
         plt.title(f"h={h}")
 
@@ -128,17 +145,23 @@ def true_solution_plot(n_points, first_row=False):
     X, Y = np.meshgrid(x, y)
     Z = phi(X, Y)
 
-    contour = plt.contourf(X, Y, Z, cmap='hot', levels=np.linspace(np.min(Z), np.max(Z), num=20))
+    contour = plt.contourf(
+        X, Y, Z, cmap="hot", levels=np.linspace(np.min(Z), np.max(Z), num=20)
+    )
 
     if first_row:
-        plt.title('True Solution')
+        plt.title("True Solution")
 
     return contour
 
 
 def main():
     h_list = [1 / 2, 1 / 4, 1 / 8]
-    methods = {jacobi: "Jacobi", gauss_seidel: "Gauss-Seidel", successive_over_relaxation: "Successive Over Relaxation"}
+    methods = {
+        jacobi: "Jacobi",
+        gauss_seidel: "Gauss-Seidel",
+        successive_over_relaxation: "Successive Over Relaxation",
+    }
     num_methods = len(methods)
 
     plt.figure(figsize=(20, 10))
@@ -161,7 +184,10 @@ def main():
         n_points = int(1 / h_list[-1]) + 1
         true_solution_plot(n_points, first_row)
 
-    plt.suptitle(r"Approximate Solutions to $\phi(x,y) = sin(\pi y)  e^{\pi x}$", fontsize="xx-large")
+    plt.suptitle(
+        r"Approximate Solutions to $\phi(x,y) = sin(\pi y)  e^{\pi x}$",
+        fontsize="xx-large",
+    )
     plt.tight_layout()
     plt.show()
 
