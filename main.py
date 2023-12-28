@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scienceplots
 
-# Uncomment the next two lines if scienceplots is installed
-# import scienceplots
-# plt.style.use(["science"])
+plt.style.use(["science"])
 
 
 def phi(x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -45,13 +44,8 @@ def jacobi(h, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (
-                    w_old[i + 1, j]
-                    + w_old[i - 1, j]
-                    + w_old[i, j - 1]
-                    + w_old[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
+                w_new[i, j] = (w_old[i + 1, j] + w_old[i - 1, j] + w_old[i, j - 1] + w_old[i, j + 1] + f[
+                    i, j] * h ** 2) / 4
 
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
@@ -74,13 +68,8 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                w_new[i, j] = (
-                    w_new[i + 1, j]
-                    + w_new[i - 1, j]
-                    + w_new[i, j - 1]
-                    + w_new[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
+                w_new[i, j] = (w_new[i + 1, j] + w_new[i - 1, j] + w_new[i, j - 1] + w_new[i, j + 1] + f[
+                    i, j] * h ** 2) / 4
 
         ratio = np.max(np.abs(w_new - w_old))
         w_old = w_new
@@ -88,7 +77,7 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
     return w_old
 
 
-def SOR(h, omega=1.5, n_iterations=10000, tol=1e-8):
+def successive_over_relaxation(h, omega=1.5, n_iterations=10000, tol=1e-8):
     """
     Solves the heat equation using the Successive Over-Relaxation (SOR) method.
     """
@@ -103,13 +92,8 @@ def SOR(h, omega=1.5, n_iterations=10000, tol=1e-8):
 
         for i in range(1, len(w_old) - 1):
             for j in range(1, len(w_old) - 1):
-                new_value = (
-                    w_new[i + 1, j]
-                    + w_new[i - 1, j]
-                    + w_new[i, j - 1]
-                    + w_new[i, j + 1]
-                    + f[i, j] * h**2
-                ) / 4
+                new_value = (w_new[i + 1, j] + w_new[i - 1, j] + w_new[i, j - 1] + w_new[i, j + 1] + f[
+                    i, j] * h ** 2) / 4
                 w_new[i, j] = omega * new_value + (1 - omega) * w_old[i, j]
 
         ratio = np.max(np.abs(w_new - w_old))
@@ -118,7 +102,24 @@ def SOR(h, omega=1.5, n_iterations=10000, tol=1e-8):
     return w_old
 
 
-def true_solution(n_points=1000):
+def plot_solution(method, h, first_row=False):
+    """
+    Plots the solution for a given method and grid spacing.
+    """
+    w = method(h)
+    n_points = w.shape[0]
+    x = np.linspace(0, 1, n_points)
+    y = np.linspace(0, 1, n_points)
+    X, Y = np.meshgrid(x, y)
+
+    contour = plt.contourf(X, Y, w, cmap='hot', levels=np.linspace(np.min(w), np.max(w), num=20))
+    if first_row:
+        plt.title(f"h={h}")
+
+    return contour
+
+
+def true_solution_plot(n_points, first_row=False):
     """
     Plots the true solution of the heat equation.
     """
@@ -127,55 +128,43 @@ def true_solution(n_points=1000):
     X, Y = np.meshgrid(x, y)
     Z = phi(X, Y)
 
-    plt.contourf(X, Y, Z, cmap="hot")
-    plt.colorbar()
-    plt.title("True Solution")
+    contour = plt.contourf(X, Y, Z, cmap='hot', levels=np.linspace(np.min(Z), np.max(Z), num=20))
 
+    if first_row:
+        plt.title('True Solution')
 
-def plot_solution(method, h, n_points, index, num_rows, num_cols):
-    """
-    Plots the solution for a given method and grid spacing.
-    """
-    w = method(h)
-    x = np.linspace(0, 1, n_points)
-    y = np.linspace(0, 1, n_points)
-    X, Y = np.meshgrid(x, y)
-
-    plt.subplot(num_rows, num_cols, index)
-    plt.contourf(X, Y, w, cmap="hot")
-    plt.colorbar()
-    plt.title(f"{method.__name__.capitalize()} Solution with h={h}")
+    return contour
 
 
 def main():
-    H_LIST = [1 / 2, 1 / 4, 1 / 8]
-    methods = [jacobi, gauss_seidel, SOR]
+    h_list = [1 / 2, 1 / 4, 1 / 8]
+    methods = {jacobi: "Jacobi", gauss_seidel: "Gauss-Seidel", successive_over_relaxation: "Successive Over Relaxation"}
     num_methods = len(methods)
 
     plt.figure(figsize=(20, 10))
-    num_cols = len(H_LIST) + 1
+    num_cols = len(h_list) + 1  # Additional column for the True Solution
     num_rows = num_methods
 
     # Plot solutions for each method
-    for row, method in enumerate(methods, start=1):
-        for col, h in enumerate(H_LIST):
-            index = (row - 1) * num_cols + col + 1
-            plt.subplot(num_rows, num_cols, index)
-            plot_solution(method, h, int(1/h) + 1, index, num_rows, num_cols)
+    for row, method in enumerate(methods.keys(), start=1):
+        for col, h in enumerate(h_list):
+            first_row = row == 1
+            plt.subplot(num_rows, num_cols, (row - 1) * num_cols + col + 1)
+            plot_solution(method, h, first_row)
             if col == 0:
-                plt.ylabel(f'{method.__name__.capitalize()}')
+                plt.ylabel(methods[method])
 
     # Plot the true solution in the last column
     for row in range(1, num_rows + 1):
+        first_row = row == 1
         plt.subplot(num_rows, num_cols, row * num_cols)
-        true_solution(n_points=int(1/H_LIST[-1]) + 1)
-        if row == 1:
-            plt.title('True Solution')
+        n_points = int(1 / h_list[-1]) + 1
+        true_solution_plot(n_points, first_row)
 
+    plt.suptitle(r"Approximate Solutions to $\phi(x,y) = sin(\pi y)  e^{\pi x}$", fontsize="xx-large")
     plt.tight_layout()
     plt.show()
 
+
 if __name__ == "__main__":
     main()
-
-
