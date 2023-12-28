@@ -87,7 +87,7 @@ def gauss_seidel(h, n_iterations=10000, tol=1e-8):
     return w_old
 
 
-def successive_over_relaxation(h, omega=1.5, n_iterations=10000, tol=1e-8):
+def successive_over_relaxation(h, n_iterations=10000, tol=1e-8):
     """
     Solves the heat equation using the Successive Over-Relaxation (SOR) method.
     """
@@ -95,6 +95,7 @@ def successive_over_relaxation(h, omega=1.5, n_iterations=10000, tol=1e-8):
     f = np.zeros_like(w_old)
     ratio = 1
     k = 0
+    omega = 2 / (1 + np.sqrt(1 - np.cos(np.pi * h) ** 2))
 
     while ratio > tol and k < n_iterations:
         k += 1
