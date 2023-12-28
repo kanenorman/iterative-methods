@@ -178,11 +178,11 @@ def animate_solutions(h, file_name):
     fig = plt.figure(figsize=(18, 6))
 
     ax_jacobi = fig.add_subplot(1, 3, 1, projection="3d")
-    ax_jacobi.set_title("Jacobi Method")
+    ax_jacobi.title.set_text("Jacobi Method - Iteration 0")
     ax_gauss_seidel = fig.add_subplot(1, 3, 2, projection="3d")
-    ax_gauss_seidel.set_title("Gauss-Seidel Method")
+    ax_gauss_seidel.title.set_text("Gauss-Seidel Method - Iteration 0")
     ax_sor = fig.add_subplot(1, 3, 3, projection="3d")
-    ax_sor.set_title("SOR Method")
+    ax_sor.title.set_text("SOR Method - Iteration 0")
 
     error_texts = [
         fig.text(0.1 + 0.3 * i, 0.02, "", transform=fig.transFigure) for i in range(3)
@@ -197,14 +197,20 @@ def animate_solutions(h, file_name):
         w_sor = solve_heat_equation_step(w_sor, sor_update, h)
 
         errors = []
-        for ax, w, method in zip(
+        for ax, w, method, iteration in zip(
             [ax_jacobi, ax_gauss_seidel, ax_sor],
             [w_jacobi, w_gauss_seidel, w_sor],
             ["Jacobi", "Gauss-Seidel", "SOR"],
+            [
+                frame,
+                frame,
+                frame,
+            ],  # Update this line if each method has different iteration counts
         ):
             ax.clear()
             ax.plot_surface(X, Y, w, cmap="hot")
             ax.set_zlim(0, np.exp(np.pi))
+            ax.title.set_text(f"{method} Method - Iteration {iteration}")
             error = np.max(np.abs(w - Z_true))
             errors.append(error)
 
@@ -212,8 +218,6 @@ def animate_solutions(h, file_name):
             error_texts, errors, ["Jacobi", "Gauss-Seidel", "SOR"]
         ):
             error_text.set_text(f"{method} Error: {error:.2e}")
-
-        fig.suptitle(f"Iteration: {frame+1}")
 
     anim = FuncAnimation(fig, update, frames=100, interval=50)
     anim.save(file_name, writer="imagemagick")
