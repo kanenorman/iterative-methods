@@ -14,7 +14,7 @@ $$
 The process involves:
 1. Discretizing the Laplace equation via finite difference schemes.
 2. Employing iterative methods such as Jacobi, Gauss-Seidel, and SOR.
-3. Analyzing the results to assess the impact of grid spacing (h) on speed and accuracy and comparing the convergence rates of the iterative methods.
+3. Analyzing the results to assess the impact of grid spacing ($h$) on speed and accuracy and comparing the convergence rates of the iterative methods.
 
 Here, $\Phi(x, y, t)$ denotes temperature at a given point $(x, y)$ and time $t$, with $\nabla^2$ representing the Laplacian operator. This equation is fundamental in modeling heat diffusion in various scientific and engineering contexts.
 
@@ -78,4 +78,4 @@ Notice that $\rho(B) \to 1$ as $h \to 0$. Thus, as $h$ decreases, the asymptotic
 
 ## Conclusion
 
-This project highlights the effectiveness of iterative methods in solving PDEs. It emphasizes the need for selecting suitable numerical approaches for precise and efficient problem-solving in various scientific and engineering applications.
+This repository highlights the effectiveness of iterative methods in solving PDEs. It emphasizes the need for selecting suitable numerical approaches for precise and efficient problem-solving in various scientific and engineering applications.
