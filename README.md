@@ -57,7 +57,7 @@ w_{ij}^{(k+1)} = (1 - \omega)w_{ij}^{(k)} + \frac{\omega}{4}(w_{(i+1),j}^{(k+1)}
 $$
 
 ## Results
-The linear system is solved for $h = \frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \frac{1}{32}, \frac{1}{64}$. Reduced h leads to smoother plots, indicating lower approximation error. The convergence visualization demonstrates the efficiency of SOR, followed by Gauss-Seidel and Jacobi. The relationship between h and convergence rate ($\rho(B)$) for each method is also examined.
+The linear system is solved for $h = \frac{1}{2}, \frac{1}{4}, \frac{1}{8}, \frac{1}{16}, \frac{1}{32}, \frac{1}{64}$. Reduced $h$ leads to smoother plots, indicating lower approximation error. The convergence visualization demonstrates the efficiency of SOR, followed by Gauss-Seidel and Jacobi. The relationship between $h$ and convergence rate $\rho(B)$ for each method is also examined.
 
 ![Contour Plot](plots/2d_contour.png)
 ![Surface Plot](plots/3d_surface.png)
