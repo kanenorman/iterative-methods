@@ -162,7 +162,7 @@ def true_solution_plot_3d(ax, n_points, first_row=False):
     return generic_plot_3d(ax, X, Y, Z, first_row, "True Solution")
 
 
-def animate_solutions(h, file_name):
+def animate_solutions(h, file_name, max_iterations=1000, tol=1e-2):
     """
     Animates the solution process for all methods and saves it to a file.
     """
@@ -175,55 +175,75 @@ def animate_solutions(h, file_name):
     X, Y = np.meshgrid(x, y)
     Z_true = phi(X, Y)
 
+    # Iteration counters
+    iter_jacobi = iter_gauss_seidel = iter_sor = 0
+    # Previous errors to check for convergence
+    prev_error_jacobi = prev_error_gauss_seidel = prev_error_sor = np.inf
+
     fig = plt.figure(figsize=(18, 6))
 
     ax_jacobi = fig.add_subplot(1, 3, 1, projection="3d")
-    ax_jacobi.title.set_text("Jacobi Method - Iteration 0")
+    ax_jacobi.title.set_text("Iteration: 0")
     ax_gauss_seidel = fig.add_subplot(1, 3, 2, projection="3d")
-    ax_gauss_seidel.title.set_text("Gauss-Seidel Method - Iteration 0")
+    ax_gauss_seidel.title.set_text("Iteration: 0")
     ax_sor = fig.add_subplot(1, 3, 3, projection="3d")
-    ax_sor.title.set_text("SOR Method - Iteration 0")
+    ax_sor.title.set_text("Iteration: 0")
 
     error_texts = [
-        fig.text(0.1 + 0.3 * i, 0.02, "", transform=fig.transFigure) for i in range(3)
+        fig.text(0.175 + 0.3 * i, 0.02, "", transform=fig.transFigure) for i in range(3)
     ]
 
     def update(frame):
         nonlocal w_jacobi, w_gauss_seidel, w_sor
-        w_jacobi = solve_heat_equation_step(w_jacobi, jacobi_update, h)
-        w_gauss_seidel = solve_heat_equation_step(
-            w_gauss_seidel, gauss_seidel_update, h
-        )
-        w_sor = solve_heat_equation_step(w_sor, sor_update, h)
+        nonlocal iter_jacobi, iter_gauss_seidel, iter_sor
+        nonlocal prev_error_jacobi, prev_error_gauss_seidel, prev_error_sor
 
-        errors = []
-        for ax, w, method, iteration in zip(
+        # Update Jacobi method and check for convergence
+        if iter_jacobi < max_iterations:
+            w_jacobi, error_jacobi = solve_heat_equation_step(
+                w_jacobi, jacobi_update, h, Z_true
+            )
+            if np.abs(error_jacobi - prev_error_jacobi) > tol:
+                prev_error_jacobi = error_jacobi
+                iter_jacobi += 1
+
+        # Update Gauss-Seidel method and check for convergence
+        if iter_gauss_seidel < max_iterations:
+            w_gauss_seidel, error_gauss_seidel = solve_heat_equation_step(
+                w_gauss_seidel, gauss_seidel_update, h, Z_true
+            )
+            if np.abs(error_gauss_seidel - prev_error_gauss_seidel) > tol:
+                prev_error_gauss_seidel = error_gauss_seidel
+                iter_gauss_seidel += 1
+
+        # Update SOR method and check for convergence
+        if iter_sor < max_iterations:
+            w_sor, error_sor = solve_heat_equation_step(w_sor, sor_update, h, Z_true)
+            if np.abs(error_sor - prev_error_sor) > tol:
+                prev_error_sor = error_sor
+                iter_sor += 1
+
+        # Update plot titles and error texts
+        for ax, w, method, iteration, error in zip(
             [ax_jacobi, ax_gauss_seidel, ax_sor],
             [w_jacobi, w_gauss_seidel, w_sor],
             ["Jacobi", "Gauss-Seidel", "SOR"],
-            [
-                frame,
-                frame,
-                frame,
-            ],  # Update this line if each method has different iteration counts
+            [iter_jacobi, iter_gauss_seidel, iter_sor],
+            [prev_error_jacobi, prev_error_gauss_seidel, prev_error_sor],
         ):
             ax.clear()
             ax.plot_surface(X, Y, w, cmap="hot")
             ax.set_zlim(0, np.exp(np.pi))
-            ax.title.set_text(f"{method} Method - Iteration {iteration}")
-            error = np.max(np.abs(w - Z_true))
-            errors.append(error)
+            ax.title.set_text(f"Iteration: {iteration}")
+            error_texts[["Jacobi", "Gauss-Seidel", "SOR"].index(method)].set_text(
+                f"{method} Error: {error:.8e}"
+            )
 
-        for error_text, error, method in zip(
-            error_texts, errors, ["Jacobi", "Gauss-Seidel", "SOR"]
-        ):
-            error_text.set_text(f"{method} Error: {error:.2e}")
-
-    anim = FuncAnimation(fig, update, frames=100, interval=50)
-    anim.save(file_name, writer="imagemagick")
+    anim = FuncAnimation(fig, update, frames=max_iterations, interval=50)
+    anim.save(f"plots/{file_name}", writer="imagemagick")
 
 
-def solve_heat_equation_step(w_old, update_strategy, h):
+def solve_heat_equation_step(w_old, update_strategy, h, Z_true):
     """
     Performs a single step of the heat equation solution using the specified update strategy.
     """
@@ -231,7 +251,8 @@ def solve_heat_equation_step(w_old, update_strategy, h):
     for i in range(1, len(w_old) - 1):
         for j in range(1, len(w_old) - 1):
             w_new[i, j] = update_strategy(w_old, w_new, i, j, h, np.zeros_like(w_old))
-    return w_new
+    error = np.max(np.abs(w_new - Z_true))
+    return w_new, error
 
 
 def main() -> int:
